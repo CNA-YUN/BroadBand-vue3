@@ -1,38 +1,37 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { useUserStore } from '@/store/user'
 
 const routes = [
+  { path: '/', redirect: '/register' }, // 🧭 默认入口
   { path: '/login', component: () => import('@/views/Login.vue') },
+  { path: '/register', component: () => import('@/views/Register.vue') },
+  { path: '/reset-password', component: () => import('@/views/ResetPassword.vue') },
+  { path: '/packages', component: () => import('@/views/Packages.vue'), meta: { requiresAuth: true } },
+  { path: '/packages/:id', component: () => import('@/views/PackageDetail.vue'), meta: { requiresAuth: true } },
+  { path: '/admin/users', component: () => import('@/views/AdminUsers.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
+  // { path: '/create-order', component: () => import('@/views/OrderCreate.vue'), meta: { requiresAuth: true } },
   { path: '/dashboard', component: () => import('@/views/Dashboard.vue'), meta: { requiresAuth: true } },
   { path: '/admin/orders', component: () => import('@/views/AdminOrders.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
-  { path: '/403', component: () => import('@/views/403.vue') } // 权限不足页
+  { path: '/admin/packages', component: () => import('@/views/AdminPackages.vue'), meta: { requiresAuth: true, requiresAdmin: true } },
+  { path: '/403', component: () => import('@/views/403.vue') },
+  { path: '/:pathMatch(.*)*', component: () => import('@/views/404.vue') } // 🛡️ 兜底
 ]
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes
-})
+const router = createRouter({ history: createWebHashHistory(), routes })
 
-// 🛡️ 全局前置守卫（每次跳转前执行）
-router.beforeEach((to, from, next) => {
+// 🛡️ 激活守卫（取消注释）
+router.beforeEach((to) => {
   const userStore = useUserStore()
-  
-  // 1. 需要登录但没 Token → 踢去登录
-  if (to.meta.requiresAuth && !userStore.isLogin) {
-    return next('/login')
+
+  if (to.meta.requiresAuth && !userStore.isLogin) return '/login'
+  if (to.meta.requiresAdmin && !userStore.isAdmin) return '/403'
+
+  const publicPages = ['/login', '/register', '/reset-password']
+  if (publicPages.includes(to.path) && userStore.isLogin) {
+    return userStore.isAdmin ? '/admin/orders' : '/dashboard'
   }
-  
-  // 2. 需要管理员但不是管理员 → 踢去 403
-  if (to.meta.requiresAdmin && !userStore.isAdmin) {
-    return next('/403')
-  }
-  
-  // 3. 已登录却访问登录页 → 自动跳对应首页
-  if (to.path === '/login' && userStore.isLogin) {
-    return next(userStore.isAdmin ? '/admin/orders' : '/dashboard')
-  }
-  
-  next() // 放行
+
+  return true
 })
 
 export default router

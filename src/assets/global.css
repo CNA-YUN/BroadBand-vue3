@@ -1,0 +1,25 @@
+/* 📱 表格移动端适配 */
+@media (max-width: 768px) {
+  .el-table { border: none !important; }
+  .el-table__header-wrapper { display: none; } /* 隐藏表头 */
+  
+  .el-table__row {
+    display: block;
+    margin-bottom: 12px;
+    border: 1px solid #e4e7ed;
+    border-radius: 8px;
+    padding: 12px;
+    background: #fff;
+  }
+  .el-table__cell {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0 !important;
+    border-bottom: 1px dashed #eee;
+  }
+  .el-table__cell:last-child { border-bottom: none; }
+  .el-table__cell .cell { color: #606266; font-size: 14px; }
+  
+  /* 操作列固定在底部 */
+  .el-table .cell > .el-button { margin: 4px 2px; }
+}
